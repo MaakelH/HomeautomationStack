@@ -1,2 +1,87 @@
-testing
+########################### NETWORKS #################################
+networks:
+  default: 
+    driver: bridge
+######################################################################
+
+
+services:
+  node-red:
+    image: nodered/node-red:latest
+    container_name: ${NODERED_NAME:-nodered}
+    user: ${PUID}
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+    ports:
+      - ${NODERED_PORT:-1880}:1880
+    volumes:
+      - nodered_data:/data
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: ${GRAFANA_NAME:-grafana}
+    restart: unless-stopped
+    networks:
+      - default
+    ports:
+      - ${GRAFANA_PORT:-3000}:3000
+    environment:
+      - GF_USERS_DEFAULT_THEME=dark
+      - GF_INSTALL_PLUGINS=grafana-clock-panel
+    volumes:
+      - grafana:/var/lib/grafana
+
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    container_name: ${MOSQUITTO_NAME:-mosquittoNew}
+    ports:
+      - ${MOSQUITTO_PORT:-1893}:1883
+    restart: unless-stopped
+    volumes:
+      - mosquitto:/mosquitto/config
+      - mosquitto:/mosquitto/log
+      - mosquitto:/mosquitto/data
+
+  influxdb:
+    image: influxdb:latest
+    container_name: ${INFLUXDB_NAME:-influxdb2}
+    ports:
+      - ${INFLUXDB_PORT:-8096}:8086
+    restart: unless-stopped
+    volumes:
+      - influxdb:/var/lib/influxdb2
+      - influxdb:/etc/influxdb2
+
+  timescaledb:
+    container_name: ${TIMESCALEDB_NAME:-timescaledb}
+    image: timescale/timescaledb:latest-pg15  
+    ports:
+      - ${TIMESCALEDB_PORT:-5432}:5432
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - timescale:/var/lib/postgresql/data 
+
+  pgadmin:
+    container_name: ${PGADMIN_NAME:-pgAdmin}
+    image: dpage/pgadmin4:latest
+    ports:
+      - ${PGADMIN_PORT:-5050}:80
+    restart: unless-stopped  
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL:-admin}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD:-admin}
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+
+volumes:
+  nodered_data:
+  grafana:
+  mosquitto:
+  influxdb:
+  timescale:
+  pgadmin-data:
 
